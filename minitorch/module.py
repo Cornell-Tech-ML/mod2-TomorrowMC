@@ -4,11 +4,11 @@ from typing import Any, Dict, Optional, Sequence, Tuple
 
 
 class Module:
-    """Modules form a tree that store parameters and other
+    """
+    Modules form a tree that store parameters and other
     submodules. They make up the basis of neural network stacks.
 
-    Attributes
-    ----------
+    Attributes:
         _modules : Storage of the child modules
         _parameters : Storage of the module's parameters
         training : Whether the module is in training mode or evaluation mode
@@ -25,54 +25,62 @@ class Module:
         self.training = True
 
     def modules(self) -> Sequence[Module]:
-        """Return the direct child modules of this module."""
+        "Return the direct child modules of this module."
         m: Dict[str, Module] = self.__dict__["_modules"]
         return list(m.values())
 
     def train(self) -> None:
-        """Set the mode of this module and all descendent modules to `train`."""
+        "Set the mode of this module and all descendent modules to `train`."
         self.training = True
-        for module in self.modules():
-            module.train()
+        for mod in self.modules():
+            mod.train()
 
     def eval(self) -> None:
-        """Set the mode of this module and all descendent modules to `eval`."""
+        "Set the mode of this module and all descendent modules to `eval`."
         self.training = False
-        for module in self.modules():
-            module.eval()
+        for mod in self.modules():
+            mod.eval()
 
     def named_parameters(self) -> Sequence[Tuple[str, Parameter]]:
-        """Collect all the parameters of this module and its descendents.
-
-        Returns
-        -------
-            The name and `Parameter` of each ancestor parameter.
-
         """
-        result = []
-        for name, param in self._parameters.items():
-            result.append((name, param))
-        for module_name, module in self._modules.items():
-            for sub_name, sub_param in module.named_parameters():
-                result.append((f"{module_name}.{sub_name}", sub_param))
-        return result
+        Collect all the parameters of this module and its descendents.
+
+
+        Returns:
+            The name and `Parameter` of each ancestor parameter.
+        """
+        paramTupleList = []
+        for key, param in self._parameters.items():
+            paramTupleList.append((key, param))
+
+        for modKey, module in self._modules.items():
+            subParamTupleList = module.named_parameters()
+            for (subKey, subParam) in subParamTupleList:
+                newKey = modKey + '.' + subKey
+                paramTupleList.append((newKey, subParam))
+
+        return paramTupleList
 
     def parameters(self) -> Sequence[Parameter]:
-        """Enumerate over all the parameters of this module and its descendents."""
-        return [param for _, param in self.named_parameters()]
+        "Enumerate over all the parameters of this module and its descendents."
+        paramList = []
+        paramList.extend(self._parameters.values())
+
+        for mod in self.modules():
+            paramList.extend(list(mod.parameters()))
+        print(paramList)
+        return paramList
 
     def add_parameter(self, k: str, v: Any) -> Parameter:
-        """Manually add a parameter. Useful helper for scalar parameters.
+        """
+        Manually add a parameter. Useful helper for scalar parameters.
 
         Args:
-        ----
             k: Local name of the parameter.
             v: Value for the parameter.
 
         Returns:
-        -------
             Newly created parameter.
-
         """
         val = Parameter(v, k)
         self.__dict__["_parameters"][k] = val
@@ -95,7 +103,6 @@ class Module:
         return None
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
-        """Call forward method."""
         return self.forward(*args, **kwargs)
 
     def __repr__(self) -> str:
@@ -127,7 +134,8 @@ class Module:
 
 
 class Parameter:
-    """A Parameter is a special container stored in a `Module`.
+    """
+    A Parameter is a special container stored in a `Module`.
 
     It is designed to hold a `Variable`, but we allow it to hold
     any value for testing.
@@ -142,7 +150,7 @@ class Parameter:
                 self.value.name = self.name
 
     def update(self, x: Any) -> None:
-        """Update the parameter value."""
+        "Update the parameter value."
         self.value = x
         if hasattr(x, "requires_grad_"):
             self.value.requires_grad_(True)
