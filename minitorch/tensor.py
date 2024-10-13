@@ -284,4 +284,117 @@ class Tensor:
         return self._tensor.shape
 
     # Functions
-    # TODO: Implement for Task 2.3.
+
+    @property
+    def size(self) -> int:
+        return int(operators.prod(self.shape))
+
+    @property
+    def dims(self) -> int:
+        return len(self.shape)
+
+    def _ensure_tensor(self, other: TensorLike) -> Tensor:
+        if isinstance(other, (int, float)):
+            return Tensor.make([other], (1,), backend=self.backend)
+        elif isinstance(other, Tensor):
+            return other
+        else:
+            raise TypeError(f"Can't convert {type(other)} to Tensor")
+
+    def add(self, other: TensorLike) -> Tensor:
+        other = self._ensure_tensor(other)
+        return Add.apply(self, other)
+
+    def sub(self, other: TensorLike) -> Tensor:
+        other = self._ensure_tensor(other)
+        return Add.apply(self, Neg.apply(other))
+
+    def mul(self, other: TensorLike) -> Tensor:
+        other = self._ensure_tensor(other)
+        return Mul.apply(self, other)
+
+    def lt(self, other: TensorLike) -> Tensor:
+        other = self._ensure_tensor(other)
+        return LT.apply(self, other)
+
+    def eq(self, other: TensorLike) -> Tensor:
+        other = self._ensure_tensor(other)
+        return EQ.apply(self, other)
+
+    def gt(self, other: TensorLike) -> Tensor:
+        other = self._ensure_tensor(other)
+        return LT.apply(other, self)
+
+    def neg(self) -> Tensor:
+        return Neg.apply(self)
+
+    def radd(self, other: TensorLike) -> Tensor:
+        return self.add(other)
+
+    def rmul(self, other: TensorLike) -> Tensor:
+        return self.mul(other)
+
+    def all(self, dim: Optional[int] = None) -> Tensor:
+        return All.apply(self, dim)
+
+    def is_close(self, other: Tensor) -> Tensor:
+        return IsClose.apply(self, other)
+
+    def sigmoid(self) -> Tensor:
+        return Sigmoid.apply(self)
+
+    def relu(self) -> Tensor:
+        return ReLU.apply(self)
+
+    def log(self) -> Tensor:
+        return Log.apply(self)
+
+    def exp(self) -> Tensor:
+        return Exp.apply(self)
+
+    def sum(self, dim: Optional[int] = None) -> Tensor:
+        return Sum.apply(self, dim)
+
+    def mean(self, dim: Optional[int] = None) -> Tensor:
+        sum_result = self.sum(dim)
+        if dim is None:
+            return sum_result / self.size
+        else:
+            return sum_result / self.shape[dim]
+
+    def permute(self, *order: int) -> Tensor:
+        return Permute.apply(self, order)
+
+    def view(self, *shape: int) -> Tensor:
+        return View.apply(self, Tensor.make(shape, backend=self.backend))
+
+    def zero_grad_(self) -> None:
+        self.grad = None
+
+    # Operator overloads
+    def __add__(self, other: TensorLike) -> Tensor:
+        return self.add(other)
+
+    def __sub__(self, other: TensorLike) -> Tensor:
+        return self.sub(other)
+
+    def __mul__(self, other: TensorLike) -> Tensor:
+        return self.mul(other)
+
+    def __lt__(self, other: TensorLike) -> Tensor:
+        return self.lt(other)
+
+    def __eq__(self, other: TensorLike) -> Tensor:  # type: ignore
+        return self.eq(other)
+
+    def __gt__(self, other: TensorLike) -> Tensor:
+        return self.gt(other)
+
+    def __neg__(self) -> Tensor:
+        return self.neg()
+
+    def __radd__(self, other: TensorLike) -> Tensor:
+        return self.radd(other)
+
+    def __rmul__(self, other: TensorLike) -> Tensor:
+        return self.rmul(other)
