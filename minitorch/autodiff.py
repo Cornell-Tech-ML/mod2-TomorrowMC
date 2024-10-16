@@ -8,19 +8,21 @@ from typing_extensions import Protocol
 
 
 def central_difference(f: Any, *vals: Any, arg: int = 0, epsilon: float = 1e-6) -> Any:
-    r"""
-    Computes an approximation to the derivative of `f` with respect to one arg.
+    r"""Computes an approximation to the derivative of `f` with respect to one arg.
 
     See :doc:`derivative` or https://en.wikipedia.org/wiki/Finite_difference for more details.
 
     Args:
+    ----
         f : arbitrary function from n-scalar args to one value
         *vals : n-float values $x_0 \ldots x_{n-1}$
         arg : the number $i$ of the arg to compute the derivative
         epsilon : a small constant
 
     Returns:
+    -------
         An approximation of $f'_i(x_0, \ldots, x_{n-1})$
+
     """
     right_vals = list(vals)
     right_vals[arg] += epsilon
@@ -37,40 +39,48 @@ variable_count = 1
 
 class Variable(Protocol):
     def accumulate_derivative(self, x: Any) -> None:
+        """Accumulates the derivative of this variable."""
         pass
 
     @property
     def unique_id(self) -> int:
+        """Returns a unique identifier for this variable."""
         pass
 
     def is_leaf(self) -> bool:
+        """Checks if this variable is a leaf in the computation graph."""
         pass
 
     def is_constant(self) -> bool:
+        """Checks if this variable is a constant."""
         pass
 
     @property
     def parents(self) -> Iterable["Variable"]:
+        """Returns the parent variables of this variable."""
         pass
 
     def chain_rule(self, d_output: Any) -> Iterable[Tuple["Variable", Any]]:
+        """Applies the chain rule to compute gradients."""
         pass
 
 
 def topological_sort(variable: Variable) -> Iterable[Variable]:
-    """
-    Computes the topological order of the computation graph.
+    """Computes the topological order of the computation graph.
 
     Args:
+    ----
         variable: The right-most variable
 
     Returns:
+    -------
         Non-constant Variables in topological order starting from the right.
+
     """
     visited = []
     result = []
 
-    def visit(n: Variable):
+    def visit(n: Variable) -> None:
         if n.is_constant():
             return
         if n.unique_id in visited:
@@ -80,20 +90,22 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
                 visit(input)
         visited.append(n.unique_id)
         result.insert(0, n)
+
     visit(variable)
     return result
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
-    """
-    Runs backpropagation on the computation graph in order to
+    """Runs backpropagation on the computation graph in order to
     compute derivatives for the leave nodes.
 
     Args:
-        variable: The right-most variable
-        deriv  : Its derivative that we want to propagate backward to the leaves.
+    ----
+        variable: The right-most variable.
+        deriv: The derivative that we want to propagate backward to the leaves.
 
-    No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
+    No return. Should write its results to the derivative values of each leaf through `accumulate_derivative`.
+
     """
     result = topological_sort(variable)
     node2driv = {}
@@ -116,19 +128,18 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
 @dataclass
 class Context:
-    """
-    Context class is used by `Function` to store information during the forward pass.
-    """
+    """Context class is used by `Function` to store information during the forward pass."""
 
     no_grad: bool = False
     saved_values: Tuple[Any, ...] = ()
 
     def save_for_backward(self, *values: Any) -> None:
-        "Store the given `values` if they need to be used during backpropagation."
+        """Store the given `values` if they need to be used during backpropagation."""
         if self.no_grad:
             return
         self.saved_values = values
 
     @property
     def saved_tensors(self) -> Tuple[Any, ...]:
+        """Returns the saved tensors."""
         return self.saved_values
