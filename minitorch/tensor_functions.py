@@ -82,13 +82,17 @@ class Function:
             The result of applying the function.
 
         """
+        from .tensor import Tensor
+
         raw_vals = []
         need_grad = False
         for v in vals:
-            if v.requires_grad():
-                need_grad = True
-            raw_vals.append(v.detach())
-
+            if isinstance(v, Tensor):
+                if v.requires_grad():
+                    need_grad = True
+                raw_vals.append(v.detach())
+            else:
+                raw_vals.append(v)
         # Create the context.
         ctx = Context(not need_grad)
 
