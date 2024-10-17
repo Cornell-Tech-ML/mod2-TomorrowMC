@@ -1,8 +1,7 @@
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any, Iterable, List, Tuple, Protocol
+from typing import Any, Iterable, Tuple
 
+from typing_extensions import Protocol
 
 # ## Task 1.1
 # Central Difference calculation
@@ -25,26 +24,45 @@ def central_difference(f: Any, *vals: Any, arg: int = 0, epsilon: float = 1e-6) 
         An approximation of $f'_i(x_0, \ldots, x_{n-1})$
 
     """
-    raise NotImplementedError("Need to include this file from past assignment.")
+    right_vals = list(vals)
+    right_vals[arg] += epsilon
+
+    left_vals = list(vals)
+    left_vals[arg] -= epsilon
+
+    delta = f(*right_vals) - f(*left_vals)
+    return delta / (2 * epsilon)
 
 
 variable_count = 1
 
 
 class Variable(Protocol):
-    def accumulate_derivative(self, x: Any) -> None: ...
+    def accumulate_derivative(self, x: Any) -> None:
+        """Accumulates the derivative of this variable."""
+        pass
 
     @property
-    def unique_id(self) -> int: ...
+    def unique_id(self) -> int:
+        """Returns a unique identifier for this variable."""
+        pass
 
-    def is_leaf(self) -> bool: ...
+    def is_leaf(self) -> bool:
+        """Checks if this variable is a leaf in the computation graph."""
+        pass
 
-    def is_constant(self) -> bool: ...
+    def is_constant(self) -> bool:
+        """Checks if this variable is a constant."""
+        pass
 
     @property
-    def parents(self) -> Iterable["Variable"]: ...
+    def parents(self) -> Iterable["Variable"]:
+        """Returns the parent variables of this variable."""
+        pass
 
-    def chain_rule(self, d_output: Any) -> Iterable[Tuple[Variable, Any]]: ...
+    def chain_rule(self, d_output: Any) -> Iterable[Tuple["Variable", Any]]:
+        """Applies the chain rule to compute gradients."""
+        pass
 
 
 def topological_sort(variable: Variable) -> Iterable[Variable]:
@@ -59,22 +77,54 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
         Non-constant Variables in topological order starting from the right.
 
     """
-    raise NotImplementedError("Need to include this file from past assignment.")
+    visited = []
+    result = []
+
+    def visit(n: Variable) -> None:
+        if n.is_constant():
+            return
+        if n.unique_id in visited:
+            return
+        if not n.is_leaf():
+            for input in n.history.inputs:
+                visit(input)
+        visited.append(n.unique_id)
+        result.insert(0, n)
+
+    visit(variable)
+    return result
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
-    """Runs backpropagation on the computation graph in order to
-    compute derivatives for the leave nodes.
+    """Runs backpropagation on the computation graph in order to compute derivatives for the leaf nodes.
 
     Args:
     ----
-        variable: The right-most variable
-        deriv  : Its derivative that we want to propagate backward to the leaves.
+        variable: The right-most variable in the computation graph.
+        deriv: The derivative of the final output with respect to the `variable`.
 
-    No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
+    Returns:
+    -------
+        None. The function updates the derivative values of each leaf node through `accumulate_derivative`.
 
     """
-    raise NotImplementedError("Need to include this file from past assignment.")
+    result = topological_sort(variable)
+    node2driv = {}
+    node2driv[variable.unique_id] = deriv
+    for n in result:
+        if n.is_leaf():
+            continue
+        if n.unique_id in node2driv.keys():
+            deriv = node2driv[n.unique_id]
+        deriv_tmp = n.chain_rule(deriv)
+        for key, item in deriv_tmp:
+            if key.is_leaf():
+                key.accumulate_derivative(item)
+                continue
+            if key.unique_id in node2driv.keys():
+                node2driv[key.unique_id] += item
+            else:
+                node2driv[key.unique_id] = item
 
 
 @dataclass
@@ -92,4 +142,5 @@ class Context:
 
     @property
     def saved_tensors(self) -> Tuple[Any, ...]:
+        """Returns the saved tensors."""
         return self.saved_values
