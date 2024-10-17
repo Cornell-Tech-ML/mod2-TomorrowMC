@@ -41,21 +41,28 @@ class TensorOps:
     @staticmethod
     def map(fn: Callable[[float], float]) -> MapProto:
         """Apply a function elementwise to a tensor."""
+
         def map_fn(x: Tensor, out: Optional[Tensor] = None) -> Tensor:
             return x
+
         return map_fn
+
     @staticmethod
     def cmap(fn: Callable[[float], float]) -> Callable[[Tensor, Tensor], Tensor]:
         """Apply a function elementwise to a tensor, with optional output tensor."""
+
         def cmap_fn(x: Tensor, y: Tensor) -> Tensor:
             return x
+
         return cmap_fn
 
     @staticmethod
     def zip(fn: Callable[[float, float], float]) -> Callable[[Tensor, Tensor], Tensor]:
         """Apply a binary function elementwise to two tensors."""
+
         def zip_fn(x: Tensor, y: Tensor) -> Tensor:
             return x
+
         return zip_fn
 
     @staticmethod
@@ -74,8 +81,10 @@ class TensorOps:
             A function that performs the reduction operation.
 
         """
+
         def reduce_fn(x: Tensor, dim: int) -> Tensor:
             return x
+
         return reduce_fn
 
     @staticmethod
@@ -309,6 +318,7 @@ def tensor_zip(
             out[index_to_position(tuple(out_index), out_strides)] = zip_data
 
     return _zip
+
 
 def tensor_reduce(
     fn: Callable[[float, float], float],

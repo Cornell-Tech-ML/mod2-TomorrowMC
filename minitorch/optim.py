@@ -2,6 +2,7 @@ from typing import Sequence
 from .module import Parameter
 from .scalar import Scalar
 
+
 class Optimizer:
     """Base class for all optimizers."""
 
@@ -14,6 +15,7 @@ class Optimizer:
 
         """
         self.parameters = parameters
+
 
 class SGD(Optimizer):
     """Stochastic Gradient Descent optimizer."""
