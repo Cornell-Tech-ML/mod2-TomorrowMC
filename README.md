@@ -17,3 +17,19 @@ python sync_previous_module.py previous-module-dir current-module-dir
 The files that will be synced are:
 
         minitorch/operators.py minitorch/module.py minitorch/autodiff.py minitorch/scalar.py minitorch/scalar_functions.py minitorch/module.py project/run_manual.py project/run_scalar.py project/datasets.py
+
+# Simple Dataset
+Time per epoch: 0.030s
+![img_1.png](img_1.png)
+
+# Diag
+Time per epoch: 0.030s
+![img_2.png](img_2.png)
+
+# Split
+Time per epoch: 0.030s
+![img_3.png](img_3.png)
+
+# Xor
+Time per epoch: 0.030s
+![img_4.png](img_4.png)
