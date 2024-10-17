@@ -41,17 +41,22 @@ class TensorOps:
     @staticmethod
     def map(fn: Callable[[float], float]) -> MapProto:
         """Apply a function elementwise to a tensor."""
-        pass
-
+        def map_fn(x: Tensor, out: Optional[Tensor] = None) -> Tensor:
+            return x
+        return map_fn
     @staticmethod
     def cmap(fn: Callable[[float], float]) -> Callable[[Tensor, Tensor], Tensor]:
         """Apply a function elementwise to a tensor, with optional output tensor."""
-        pass
+        def cmap_fn(x: Tensor, y: Tensor) -> Tensor:
+            return x
+        return cmap_fn
 
     @staticmethod
     def zip(fn: Callable[[float, float], float]) -> Callable[[Tensor, Tensor], Tensor]:
         """Apply a binary function elementwise to two tensors."""
-        pass
+        def zip_fn(x: Tensor, y: Tensor) -> Tensor:
+            return x
+        return zip_fn
 
     @staticmethod
     def reduce(
@@ -69,7 +74,9 @@ class TensorOps:
             A function that performs the reduction operation.
 
         """
-        pass
+        def reduce_fn(x: Tensor, dim: int) -> Tensor:
+            return x
+        return reduce_fn
 
     @staticmethod
     def matrix_multiply(a: Tensor, b: Tensor) -> Tensor:
@@ -161,9 +168,9 @@ class SimpleOps(TensorOps):
         """
         f = tensor_zip(fn)
 
-        def ret(a: "Tensor", b: "Tensor") -> "Tensor":
+        def ret(a: Tensor, b: Tensor) -> Tensor:
             if a.shape != b.shape:
-                c_shape = shape_broadcast(a.shape, b.shape)
+                c_shape = shape_broadcast(tuple(a.shape), tuple(b.shape))
             else:
                 c_shape = a.shape
             out = a.zeros(c_shape)
@@ -190,11 +197,10 @@ class SimpleOps(TensorOps):
         """
         f = tensor_reduce(fn)
 
-        def ret(a: "Tensor", dim: int) -> "Tensor":
+        def ret(a: Tensor, dim: int) -> Tensor:
             out_shape = list(a.shape)
             out_shape[dim] = 1
 
-            # Other values when not sum.
             out = a.zeros(tuple(out_shape))
             out._tensor._storage[:] = start
 
@@ -249,14 +255,14 @@ def tensor_map(
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-        out_index = np.array(out_shape)
-        in_index = np.array(in_shape)
+        out_index = np.zeros(len(out_shape), dtype=np.int32)
+        in_index = np.zeros(len(in_shape), dtype=np.int32)
         for i in range(len(out)):
             to_index(i, out_shape, out_index)
-            broadcast_index(out_index, out_shape, in_shape, in_index)
-            data = in_storage[index_to_position(in_index, in_strides)]
+            broadcast_index(out_index, tuple(out_shape), tuple(in_shape), in_index)
+            data = in_storage[index_to_position(tuple(in_index), in_strides)]
             map_data = fn(data)
-            out[index_to_position(out_index, out_strides)] = map_data
+            out[index_to_position(tuple(out_index), out_strides)] = map_data
 
     return _map
 
@@ -290,20 +296,19 @@ def tensor_zip(
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
-        out_index = np.array(out_shape)
-        a_index = np.array(a_shape)
-        b_index = np.array(b_shape)
+        out_index = np.zeros(len(out_shape), dtype=np.int32)
+        a_index = np.zeros(len(a_shape), dtype=np.int32)
+        b_index = np.zeros(len(b_shape), dtype=np.int32)
         for i in range(len(out)):
             to_index(i, out_shape, out_index)
-            broadcast_index(out_index, out_shape, a_shape, a_index)
-            broadcast_index(out_index, out_shape, b_shape, b_index)
-            a_data = a_storage[index_to_position(a_index, a_strides)]
-            b_data = b_storage[index_to_position(b_index, b_strides)]
+            broadcast_index(out_index, tuple(out_shape), tuple(a_shape), a_index)
+            broadcast_index(out_index, tuple(out_shape), tuple(b_shape), b_index)
+            a_data = a_storage[index_to_position(tuple(a_index), a_strides)]
+            b_data = b_storage[index_to_position(tuple(b_index), b_strides)]
             zip_data = fn(a_data, b_data)
-            out[index_to_position(out_index, out_strides)] = zip_data
+            out[index_to_position(tuple(out_index), out_strides)] = zip_data
 
     return _zip
-
 
 def tensor_reduce(
     fn: Callable[[float, float], float],
@@ -329,14 +334,14 @@ def tensor_reduce(
         a_strides: Strides,
         reduce_dim: int,
     ) -> None:
-        out_index = np.array(out_shape)
+        out_index = np.zeros(len(out_shape), dtype=np.int32)
         for i in range(len(out)):
             to_index(i, out_shape, out_index)
-            o_index = index_to_position(out_index, out_strides)
+            o_index = index_to_position(tuple(out_index), out_strides)
             for j in range(a_shape[reduce_dim]):
                 a_index = out_index.copy()
                 a_index[reduce_dim] = j
-                pos_a = index_to_position(a_index, a_strides)
+                pos_a = index_to_position(tuple(a_index), a_strides)
                 v = fn(a_storage[pos_a], out[o_index])
                 out[o_index] = v
 
