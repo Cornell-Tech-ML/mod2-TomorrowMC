@@ -90,6 +90,7 @@ class TensorTrain:
             optim.step()
 
 
+
             # Logging
             if epoch % 10 == 0 or epoch == max_epochs:
                 y2 = minitorch.tensor(data.y)
