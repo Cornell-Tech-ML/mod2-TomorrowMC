@@ -285,7 +285,7 @@ def map(fn: Callable[[float], float]) -> Callable[[Iterable[float]], Iterable[fl
 
     """
 
-    def apply(ls: Iterable[float]):
+    def apply(ls: Iterable[float]) -> Iterable[float]:
         ret = []
         for x in ls:
             ret.append(fn(x))
@@ -325,7 +325,7 @@ def zipWith(
 
     """
 
-    def apply(ls1: Iterable[float], ls2: Iterable[float]):
+    def apply(ls1: Iterable[float], ls2: Iterable[float]) -> Iterable[float]:
         assert len(ls1) == len(ls2)
         size = len(ls1)
         ret = []

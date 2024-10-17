@@ -40,9 +40,6 @@ class ScalarHistory:
     inputs: Sequence[Scalar] = ()
 
 
-# ## Task 1.2 and 1.4
-# Scalar Forward and Backward
-
 _var_count = 0
 
 
@@ -117,18 +114,44 @@ class Scalar:
         return self * b
 
     def log(self) -> Scalar:
+        """Compute the natural logarithm of the scalar.
+
+        Returns
+        -------
+            Scalar: The result of applying the natural logarithm.
+
+        """
         return Log.apply(self)
 
     def exp(self) -> Scalar:
+        """Compute the exponential of the scalar.
+
+        Returns
+        -------
+            Scalar: The result of applying the exponential function.
+
+        """
         return Exp.apply(self)
 
     def sigmoid(self) -> Scalar:
+        """Apply the sigmoid function to the scalar.
+
+        Returns
+        -------
+            Scalar: The result of applying the sigmoid function.
+
+        """
         return Sigmoid.apply(self)
 
     def relu(self) -> Scalar:
-        return ReLU.apply(self)
+        """Apply the ReLU (Rectified Linear Unit) function to the scalar.
 
-    # Variable elements for backprop
+        Returns
+        -------
+            Scalar: The result of applying the ReLU function.
+
+        """
+        return ReLU.apply(self)
 
     def accumulate_derivative(self, x: Any) -> None:
         """Add `val` to the the derivative accumulated on this variable.
@@ -145,18 +168,49 @@ class Scalar:
         self.derivative += x
 
     def is_leaf(self) -> bool:
-        """True if this variable created by the user (no `last_fn`)"""
+        """Check if this variable was created by the user (no `last_fn`).
+
+        Returns
+        -------
+            bool: True if this is a leaf variable, False otherwise.
+
+        """
         return self.history is not None and self.history.last_fn is None
 
     def is_constant(self) -> bool:
+        """Check if this variable is a constant (has no history).
+
+        Returns
+        -------
+            bool: True if this is a constant, False otherwise.
+
+        """
         return self.history is None
 
     @property
     def parents(self) -> Iterable[Variable]:
+        """Get the parent variables of this variable.
+
+        Returns
+        -------
+            Iterable[Variable]: The parent variables.
+
+        """
         assert self.history is not None
         return self.history.inputs
 
     def chain_rule(self, d_output: Any) -> Iterable[Tuple[Variable, Any]]:
+        """Apply the chain rule to compute gradients.
+
+        Args:
+        ----
+            d_output: The gradient flowing back from the output.
+
+        Returns:
+        -------
+            Iterable[Tuple[Variable, Any]]: Pairs of (variable, gradient).
+
+        """
         h = self.history
         assert h is not None
         assert h.last_fn is not None
@@ -170,8 +224,8 @@ class Scalar:
 
         Args:
         ----
-            d_output (number, opt): starting derivative to backpropagate through the model
-                                   (typically left out, and assumed to be 1.0).
+            d_output (float, optional): starting derivative to backpropagate through the model
+                                        (typically left out, and assumed to be 1.0).
 
         """
         if d_output is None:
@@ -183,10 +237,10 @@ def derivative_check(f: Any, *scalars: Scalar) -> None:
     """Checks that autodiff works on a python function.
     Asserts False if derivative is incorrect.
 
-    Parameters
-    ----------
-        f : function from n-scalars to 1-scalar.
-        *scalars  : n input scalar values.
+    Args:
+    ----
+        f: function from n-scalars to 1-scalar.
+        *scalars: n input scalar values.
 
     """
     out = f(*scalars)

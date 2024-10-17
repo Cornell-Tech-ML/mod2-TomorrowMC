@@ -21,7 +21,20 @@ if TYPE_CHECKING:
 class MapProto(Protocol):
     """Protocol for map operations on tensors."""
 
-    def __call__(self, x: Tensor, out: Optional[Tensor] = ..., /) -> Tensor: ...
+    def __call__(self, x: Tensor, out: Optional[Tensor] = ..., /) -> Tensor:
+        """Apply the map operation to a tensor.
+
+        Args:
+        ----
+            x: Input tensor.
+            out: Optional output tensor.
+
+        Returns:
+        -------
+            Result of the map operation.
+
+        """
+        ...
 
 
 class TensorOps:
@@ -220,7 +233,7 @@ def tensor_map(
 
     Args:
     ----
-        fn: function from float-to-float to apply
+        fn: Function from float-to-float to apply.
 
     Returns:
     -------
@@ -258,7 +271,7 @@ def tensor_zip(
 
     Args:
     ----
-        fn: function mapping two floats to float to apply
+        fn: Function mapping two floats to float to apply.
 
     Returns:
     -------
@@ -299,7 +312,7 @@ def tensor_reduce(
 
     Args:
     ----
-        fn: reduction function mapping two floats to float
+        fn: Reduction function mapping two floats to float.
 
     Returns:
     -------

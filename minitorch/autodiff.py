@@ -96,15 +96,16 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
-    """Runs backpropagation on the computation graph in order to
-    compute derivatives for the leave nodes.
+    """Runs backpropagation on the computation graph in order to compute derivatives for the leaf nodes.
 
     Args:
     ----
-        variable: The right-most variable.
-        deriv: The derivative that we want to propagate backward to the leaves.
+        variable: The right-most variable in the computation graph.
+        deriv: The derivative of the final output with respect to the `variable`.
 
-    No return. Should write its results to the derivative values of each leaf through `accumulate_derivative`.
+    Returns:
+    -------
+        None. The function updates the derivative values of each leaf node through `accumulate_derivative`.
 
     """
     result = topological_sort(variable)
